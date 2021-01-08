@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,6 +19,9 @@ public class RedisUtil {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+
+    //  =========================== common ===========================
 
     /**
      * 设置缓存失效时间
@@ -73,6 +77,9 @@ public class RedisUtil {
             }
         }
     }
+
+
+    //  =========================== String ===========================
 
     /**
      * 放入操作
@@ -140,6 +147,143 @@ public class RedisUtil {
      */
     public long decrement(String key, long num) {
         return this.increment(key, -num);
+    }
+
+
+    //  =========================== Hash ===========================
+
+    /**
+     * hash中放入数据，不存在会创建
+     * @param h     表
+     * @param hk    键
+     * @param hv    值
+     * @return  true 成功 false 失败
+     */
+    public boolean hashSet(String h, String hk, Object hv) {
+        try {
+            redisTemplate.opsForHash().put(h, hk, hv);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * hash中放入数据并设置缓存时间，不存在会创建
+     * @param h     表
+     * @param hk    键
+     * @param hv    值
+     * @param time  时间（秒）   已存在的时间会被更新
+     * @return  true 成功 false 失败
+     */
+    public boolean hashSet(String h, String hk, Object hv, long time) {
+        try {
+            redisTemplate.opsForHash().put(h, hk, hv);
+            if (time > 0) {
+                this.expire(h, time);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * hash中放入多个数据
+     * @param h     表
+     * @param map   多个键值对
+     * @return  true 成功 false 失败
+     */
+    public boolean hashSetAll(String h, Map<String, Object> map) {
+        try {
+            redisTemplate.opsForHash().putAll(h, map);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * hash中放入多个数据并设置缓存时间
+     * @param h     表
+     * @param map   多个键值对
+     * @param time  缓存时间
+     * @return  true 成功 false 失败
+     */
+    public boolean hashSetAll(String h, Map<String, Object> map, long time) {
+        try {
+            redisTemplate.opsForHash().putAll(h, map);
+            if (time > 0) {
+                this.expire(h, time);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 获取hash中key对应的值
+     * @param h     表
+     * @param hk    键
+     * @return  值
+     */
+    public Object hashGet(String h, String hk) {
+        return redisTemplate.opsForHash().get(h, hk);
+    }
+
+    /**
+     * 获取hash中所有键值对
+     * @param h     表
+     * @return  键值对
+     */
+    public Map<String, Object> hashGetAll(String h) {
+        return redisTemplate.opsForHash().entries(h);
+    }
+
+    /**
+     * 删除hash中key的值
+     * @param h     表
+     * @param hk    键（多个值）
+     */
+    public void hashDel(String h, String... hk) {
+        redisTemplate.opsForHash().delete(h, hk);
+    }
+
+    /**
+     * 判断hash中是否包含该key和对应的值
+     * @param h     表
+     * @param hk    键
+     * @return true 存在 false 不存在
+     */
+    public boolean hasHashKey(String h, String hk) {
+        return redisTemplate.opsForHash().hasKey(h, hk);
+    }
+
+    /**
+     * hash递增
+     * @param h     表
+     * @param hk    键
+     * @param num   增加数（大于0）
+     * @return
+     */
+    public double hashIncrement(String h, String hk, double num) {
+        return redisTemplate.opsForHash().increment(h, hk, num);
+    }
+
+    /**
+     * hash递减
+     * @param h     表
+     * @param hk    键
+     * @param num   减少数（大于0）
+     * @return
+     */
+    public double hashDecrement(String h, String hk, double num) {
+        return this.hashIncrement(h, hk, -num);
     }
 
 }
