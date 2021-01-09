@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -131,7 +132,7 @@ public class RedisUtil {
      * 递增
      * @param key   键
      * @param num   增加数（大于0）
-     * @return
+     * @return  变化后的值
      */
     public long increment(String key, long num) {
         if (num <= 0)
@@ -143,7 +144,7 @@ public class RedisUtil {
      * 递减
      * @param key   键
      * @param num   减少数（大于0）
-     * @return
+     * @return  变化后的值
      */
     public long decrement(String key, long num) {
         return this.increment(key, -num);
@@ -269,7 +270,7 @@ public class RedisUtil {
      * @param h     表
      * @param hk    键
      * @param num   增加数（大于0）
-     * @return
+     * @return  变化后的值
      */
     public double hashIncrement(String h, String hk, double num) {
         return redisTemplate.opsForHash().increment(h, hk, num);
@@ -280,10 +281,105 @@ public class RedisUtil {
      * @param h     表
      * @param hk    键
      * @param num   减少数（大于0）
-     * @return
+     * @return  变化后的值
      */
     public double hashDecrement(String h, String hk, double num) {
         return this.hashIncrement(h, hk, -num);
+    }
+
+
+    //  =========================== Set ===========================
+
+    /**
+     * set中放入多个数据
+     * @param key       键
+     * @param values    值（多个）
+     * @return          成功个数，异常返回-1
+     */
+    public long setSetAll(String key, Object... values) {
+        try {
+            return redisTemplate.opsForSet().add(key, values);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
+     * set中放入多个数据并设置缓存时间
+     * @param key       键
+     * @param values    值（多个）
+     * @param time      缓存时间（秒）
+     * @return          成功个数，异常返回-1
+     */
+    public long setSetAll(String key, long time, Object... values) {
+        try {
+            long result = redisTemplate.opsForSet().add(key, values);
+            if (time > 0)
+                expire(key, time);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
+     * Set获取值
+     * @param key   键
+     * @return 获取值集合
+     */
+    public Set<Object> setGet(String key) {
+        try {
+            return redisTemplate.opsForSet().members(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Set删除元素
+     * @param key       键
+     * @param values    值（多个）
+     * @return          删除个数，异常返回-1
+     */
+    public long setDel(String key, Object... values) {
+        try {
+            return redisTemplate.opsForSet().remove(key, values);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
+     * 判断Set中是否包含当前key，value
+     * @param key   键
+     * @param value 值
+     * @return  true 存在 false 不存在
+     */
+    public boolean setHasKey(String key, Object value) {
+        try {
+            return redisTemplate.opsForSet().isMember(key, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 获取Set中key对应value的长度
+     * @param key   键
+     * @return  值长度，异常返回-1
+     */
+    public long setGetSize(String key) {
+        try {
+            return redisTemplate.opsForSet().size(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 
 }
