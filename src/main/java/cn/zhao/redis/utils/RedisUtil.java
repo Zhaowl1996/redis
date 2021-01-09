@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -376,6 +377,156 @@ public class RedisUtil {
     public long setGetSize(String key) {
         try {
             return redisTemplate.opsForSet().size(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    //  =========================== List ===========================
+
+    /**
+     * List尾部push
+     * @param key   键
+     * @param value 值
+     * @return  true 成功 false 失败
+     */
+    public boolean listRpush(String key, Object value) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * List尾部push并设置缓存时间
+     * @param key   键
+     * @param value 值
+     * @param time  缓存时间（秒）
+     * @return  true 成功 false 失败
+     */
+    public boolean listRpush(String key, Object value, long time) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+            if (time > 0)
+                expire(key, time);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * List尾部push多个元素
+     * @param key       键
+     * @param values    值（多个）
+     * @return  true 成功 false 失败
+     */
+    public boolean listRpushAll(String key, List<Object> values) {
+        try {
+            redisTemplate.opsForList().rightPushAll(key, values);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * List尾部push多个元素并设置缓存时间
+     * @param key       键
+     * @param values    值
+     * @param time      缓存时间
+     * @return  true 成功 false 失败
+     */
+    public boolean listRpushAll(String key, List<Object> values, long time) {
+        try {
+            redisTemplate.opsForList().rightPushAll(key, values);
+            if (time > 0)
+                expire(key, time);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * List获取多个元素
+     * @param key   键
+     * @param start 开始下标
+     * @param end   结束下标    0，-1表示所有值
+     * @return  返回元素结果集
+     */
+    public List<Object> listGet(String key, long start, long end) {
+        try {
+            return redisTemplate.opsForList().range(key, start, end);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * List通过索引获取元素
+     * @param key   键
+     * @param index 索引
+     * @return  值
+     */
+    public Object listGetByIndex(String key, long index) {
+        try {
+            return redisTemplate.opsForList().index(key, index);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * List通过索引修改元素
+     * @param key   键
+     * @param index 索引
+     * @param value 修改值
+     * @return  true 成功 false 失败
+     */
+    public boolean listUpdateByIndex(String key, long index, Object value) {
+        try {
+            redisTemplate.opsForList().set(key, index, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * List移除多个值为value的元素
+     * @param key   键
+     * @param count 移除数
+     * @param value 值
+     * @return  移除数，异常返回-1
+     */
+    public long listRemove(String key, long count, Object value) {
+        try {
+            return redisTemplate.opsForList().remove(key, count, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
+     * 获取List中key对应value的长度
+     * @param key   键
+     * @return  值长度，异常返回-1
+     */
+    public long listGetSize(String key) {
+        try {
+            return redisTemplate.opsForList().size(key);
         } catch (Exception e) {
             e.printStackTrace();
             return -1;
